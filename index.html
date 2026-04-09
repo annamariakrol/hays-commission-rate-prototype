@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HAYS — Customer profile (commission rate edit prototype)</title>
+  <style>
+    :root {
+      --hays-teal: #00a88e;
+      --hays-teal-dark: #008f78;
+      --text: #2d2d2d;
+      --text-muted: #666;
+      --border: #e0e0e0;
+      --bg-page: #f0f2f4;
+      --bg-card: #fff;
+      --link: #1570ef;
+      --overlay: rgba(0, 0, 0, 0.45);
+      --radius: 6px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg-page);
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+
+    /* —— App shell —— */
+    .app-header {
+      background: var(--hays-teal);
+      color: #fff;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+    }
+    .logo span { font-weight: 400; opacity: 0.9; }
+    .search-wrap {
+      flex: 1;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .search-wrap input {
+      width: 100%;
+      height: 34px;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0 12px;
+      font-size: 13px;
+    }
+    .user-email {
+      font-size: 12px;
+      opacity: 0.95;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+
+    .shell {
+      display: flex;
+      min-height: calc(100vh - 52px);
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #fff;
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      flex-shrink: 0;
+    }
+    .sidebar h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 8px 16px 6px;
+      font-weight: 600;
+    }
+    .sidebar a {
+      display: block;
+      padding: 8px 16px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .sidebar a:hover { background: #f5f5f5; }
+    .badge-new {
+      font-size: 10px;
+      background: var(--hays-teal);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .main {
+      flex: 1;
+      padding: 20px 24px;
+      overflow: auto;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 240px 1fr 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 1200px) {
+      .profile-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .card-head {
+      background: #1e6bb8;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-head.muted {
+      background: #f5f5f5;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      letter-spacing: normal;
+    }
+    .card-body { padding: 14px; }
+
+    .avatar-block {
+      text-align: center;
+      padding-top: 8px;
+    }
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c8e6e0, #80cbc4);
+      margin: 0 auto 10px;
+    }
+    .customer-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+    .customer-id { font-size: 12px; color: var(--text-muted); }
+    .btn-outline {
+      margin-top: 10px;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: var(--radius);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-outline:hover { background: #fafafa; }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row-label { color: var(--text-muted); flex-shrink: 0; }
+    .row-value { text-align: right; flex: 1; word-break: break-word; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-warn { background: #fff3cd; color: #856404; }
+    .badge-ok { background: #d4edda; color: #155724; }
+
+    .link { color: var(--link); text-decoration: none; cursor: pointer; background: none; border: none; font: inherit; padding: 0; }
+    .link:hover { text-decoration: underline; }
+
+    /* Editable value + pencil (matches invoice email pattern) */
+    .editable-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: var(--link);
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 0;
+    }
+    .icon-btn:hover { background: rgba(21, 112, 239, 0.08); }
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--link);
+      outline-offset: 2px;
+    }
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    /* —— Modal —— */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+    .modal-backdrop.is-open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: modalIn 0.18s ease-out;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.98) translateY(-6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 0;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .modal-close:hover { background: #f0f0f0; color: var(--text); }
+
+    .modal-body { padding: 16px 20px 8px; }
+    .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .field-input {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 12px;
+      font-size: 14px;
+      font-family: var(--font);
+    }
+    .field-input:focus {
+      outline: none;
+      border-color: var(--hays-teal);
+      box-shadow: 0 0 0 2px rgba(0, 168, 142, 0.2);
+    }
+    .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 20px 20px;
+    }
+    .btn {
+      min-width: 88px;
+      height: 38px;
+      padding: 0 18px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font);
+      border: 1px solid transparent;
+    }
+    .btn-cancel {
+      background: #fff;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-cancel:hover { background: #fafafa; }
+    .btn-save {
+      background: var(--hays-teal);
+      color: #fff;
+      border-color: var(--hays-teal);
+    }
+    .btn-save:hover { background: var(--hays-teal-dark); border-color: var(--hays-teal-dark); }
+
+    .prototype-banner {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      opacity: 0.92;
+      z-index: 500;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo">HAY<span>$</span></div>
+    <div class="search-wrap">
+      <input type="search" placeholder="Search for the profile, customers, invoice..." aria-label="Search">
+    </div>
+    <div class="user-email" title="Logged in user">anna.krol+testcontigo@docplanner.com</div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <h3>Library</h3>
+      <a href="#">Commission</a>
+      <a href="#">Admin</a>
+      <a href="#">Status Page</a>
+      <a href="#">Report a bug</a>
+      <a href="#">Share feedback</a>
+      <h3>CRM</h3>
+      <a href="#">Dashboard <span class="badge-new">NEW</span></a>
+      <a href="#">Customers</a>
+      <a href="#">Deals</a>
+    </aside>
+
+    <main class="main">
+      <div class="profile-grid">
+        <!-- Customer summary -->
+        <section class="card" aria-labelledby="customer-head">
+          <div class="card-head" id="customer-head">
+            <span>CUSTOMER 104230</span>
+            <span aria-hidden="true">✎</span>
+          </div>
+          <div class="card-body">
+            <div class="avatar-block">
+              <div class="avatar" role="img" aria-label="Profile placeholder"></div>
+              <div class="customer-name">Anna Maria Król Contigo</div>
+              <div class="customer-id">ID 104230</div>
+              <button type="button" class="btn-outline">edit</button>
+            </div>
+            <div class="row" style="margin-top:12px; border-top:1px solid #f0f0f0; padding-top:12px;">
+              <span class="row-label">Address</span>
+              <span class="row-value">Warsaw, Poland</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Phone</span>
+              <span class="row-value">+48 …</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Details (abbreviated) -->
+        <section class="card">
+          <div class="card-head muted">Details</div>
+          <div class="card-body">
+            <div class="row">
+              <span class="row-label">Hubspot ID</span>
+              <span class="row-value">—</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Last login</span>
+              <span class="row-value">2026-04-08 10:12</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Payout</span>
+              <span class="row-value">
+                <span class="editable-line">
+                  <span id="payout-email-display">anna.krol+testcontigo@docplanner.com</span>
+                  <button type="button" class="icon-btn" id="open-email-modal" title="Edit invoice email" aria-label="Edit invoice email">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                </span>
+              </span>
+            </div>
+            <div class="row">
+              <span class="row-label">Commission</span>
+              <span class="row-value">23% <button type="button" class="link">Add</button></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Invoicing -->
+        <section class="card">
+          <div class="card-head muted">Invoicing</div>
+          <div class="card-body">
+            <div class="row">
+              <span class="row-label">Invoices status</span>
+              <span class="row-value"><span class="badge badge-warn">OVERDUE</span></span>
+            </div>
+            <div class="row">
+              <span class="row-label">Invoice email</span>
+              <span class="row-value">
+                <span class="editable-line">
+                  <span id="invoice-email-display">anna.krol+testcontigo@docplanner.com</span>
+                  <button type="button" class="icon-btn" id="open-invoice-email-modal" title="Edit invoice email" aria-label="Edit invoice email">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                </span>
+              </span>
+            </div>
+            <div class="row">
+              <span class="row-label">E-invoice</span>
+              <span class="row-value"><span class="badge badge-ok">ENABLED</span></span>
+            </div>
+            <div class="row">
+              <span class="row-label">Vat rate</span>
+              <span class="row-value">23%</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Payments -->
+        <section class="card">
+          <div class="card-head muted">Payments</div>
+          <div class="card-body">
+            <div class="row">
+              <span class="row-label">Credit Card</span>
+              <span class="row-value"><button type="button" class="link">View details</button></span>
+            </div>
+            <div class="row">
+              <span class="row-label">DP Account</span>
+              <span class="row-value">193291 — <span class="badge badge-ok">CONNECTED</span></span>
+            </div>
+            <div class="row">
+              <span class="row-label">Statement Descriptor</span>
+              <span class="row-value">Anna Contigo</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Payins</span>
+              <span class="row-value">✓</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Payouts</span>
+              <span class="row-value">✓</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Commission rate</span>
+              <span class="row-value">
+                <span class="editable-line">
+                  <span id="commission-rate-display">30%</span>
+                  <button type="button" class="icon-btn" id="open-commission-modal" title="Edit commission rate" aria-label="Edit commission rate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                </span>
+              </span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Invoice email -->
+  <div class="modal-backdrop" id="modal-email" role="dialog" aria-modal="true" aria-labelledby="modal-email-title" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-email-title">Update customer invoice email</h2>
+        <button type="button" class="modal-close" id="close-email-modal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="input-invoice-email">Invoice email</label>
+        <input type="email" class="field-input" id="input-invoice-email" autocomplete="email">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" id="cancel-email">Cancel</button>
+        <button type="button" class="btn btn-save" id="save-email">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Commission rate -->
+  <div class="modal-backdrop" id="modal-commission" role="dialog" aria-modal="true" aria-labelledby="modal-commission-title" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-commission-title">Update commission rate</h2>
+        <button type="button" class="modal-close" id="close-commission-modal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="input-commission-rate">Commission rate</label>
+        <input type="text" class="field-input" id="input-commission-rate" inputmode="decimal" placeholder="e.g. 30" aria-describedby="commission-hint">
+        <p class="field-hint" id="commission-hint">Enter a number; % is shown on the profile.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" id="cancel-commission">Cancel</button>
+        <button type="button" class="btn btn-save" id="save-commission">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="prototype-banner">Static prototype — data is not persisted</p>
+
+  <script>
+    (function () {
+      var invoiceEmailDisplay = document.getElementById('invoice-email-display');
+      var payoutEmailDisplay = document.getElementById('payout-email-display');
+      var commissionDisplay = document.getElementById('commission-rate-display');
+
+      var modalEmail = document.getElementById('modal-email');
+      var inputInvoiceEmail = document.getElementById('input-invoice-email');
+
+      var modalCommission = document.getElementById('modal-commission');
+      var inputCommission = document.getElementById('input-commission-rate');
+
+      function openModal(el) {
+        el.hidden = false;
+        el.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeModal(el) {
+        el.classList.remove('is-open');
+        el.hidden = true;
+        document.body.style.overflow = '';
+      }
+
+      function getEmailText() {
+        return invoiceEmailDisplay.textContent.trim();
+      }
+      function setEmailText(v) {
+        invoiceEmailDisplay.textContent = v;
+        if (payoutEmailDisplay) payoutEmailDisplay.textContent = v;
+      }
+
+      function parseCommission(raw) {
+        var s = String(raw).trim().replace(',', '.');
+        var n = parseFloat(s.replace(/%/g, ''));
+        return isNaN(n) ? null : n;
+      }
+      function formatCommission(n) {
+        if (n === null || n < 0 || n > 100) return null;
+        var rounded = Math.round(n * 100) / 100;
+        return rounded + '%';
+      }
+
+      function openEmailFlow() {
+        inputInvoiceEmail.value = getEmailText();
+        openModal(modalEmail);
+        setTimeout(function () { inputInvoiceEmail.focus(); inputInvoiceEmail.select(); }, 0);
+      }
+
+      document.getElementById('open-invoice-email-modal').addEventListener('click', openEmailFlow);
+      document.getElementById('open-email-modal').addEventListener('click', openEmailFlow);
+
+      document.getElementById('close-email-modal').addEventListener('click', function () { closeModal(modalEmail); });
+      document.getElementById('cancel-email').addEventListener('click', function () { closeModal(modalEmail); });
+      document.getElementById('save-email').addEventListener('click', function () {
+        var v = inputInvoiceEmail.value.trim();
+        if (v) setEmailText(v);
+        closeModal(modalEmail);
+      });
+
+      document.getElementById('open-commission-modal').addEventListener('click', function () {
+        var current = commissionDisplay.textContent.replace(/%/g, '').trim();
+        inputCommission.value = current;
+        openModal(modalCommission);
+        setTimeout(function () { inputCommission.focus(); inputCommission.select(); }, 0);
+      });
+      document.getElementById('close-commission-modal').addEventListener('click', function () { closeModal(modalCommission); });
+      document.getElementById('cancel-commission').addEventListener('click', function () { closeModal(modalCommission); });
+      document.getElementById('save-commission').addEventListener('click', function () {
+        var n = parseCommission(inputCommission.value);
+        var formatted = formatCommission(n);
+        if (formatted !== null) {
+          commissionDisplay.textContent = formatted;
+          closeModal(modalCommission);
+        } else {
+          inputCommission.focus();
+          inputCommission.setAttribute('aria-invalid', 'true');
+        }
+      });
+
+      modalEmail.addEventListener('click', function (e) {
+        if (e.target === modalEmail) closeModal(modalEmail);
+      });
+      modalCommission.addEventListener('click', function (e) {
+        if (e.target === modalCommission) closeModal(modalCommission);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        if (modalEmail.classList.contains('is-open')) closeModal(modalEmail);
+        if (modalCommission.classList.contains('is-open')) closeModal(modalCommission);
+      });
+    })();
+  </script>
+</body>
+</html>
